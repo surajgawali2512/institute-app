@@ -1,0 +1,50 @@
+/* src/components/Navbar.css */
+
+/* container */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: #0077b6;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* logo */
+.navbar-logo {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #fff;
+  text-decoration: none;
+  letter-spacing: 0.5px;
+}
+
+/* links wrapper */
+.nav-links {
+  display: flex;
+  gap: 1.5rem;
+}
+
+/* individual links */
+.nav-links a {
+  color: #fff;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+/* hover state */
+.nav-links a:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+/* current/active page (if you add logic to set an active class) */
+.nav-links a.active {
+  background-color: #e63946;
+  font-weight: 600;
+}
