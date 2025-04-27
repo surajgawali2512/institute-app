@@ -29,6 +29,12 @@ const Login = () => {
       );
 
       if (response.status === 200) {
+        // ✅ Save only the email in sessionStorage
+        sessionStorage.setItem("username", response.data.username);
+        console.log(sessionStorage.getItem("username"));
+        //If Want the All Object data in the sessionStorage then it required
+        // sessionStorage.setItem('user', JSON.stringify(response.data));
+
         alert("Login successful!");
         navigate("/");
       } else {
