@@ -1,19 +1,25 @@
 // src/App.jsx
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import Home from './pages/Home';
-import Login from './pages/Login';
- import RegisterInstitute from './components/RegisterInstitute';
-import NotFound from './pages/NotFound';
+import React from "react";
+import { Routes, Route } from "react-router-dom";
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import RegisterInstitute from "./components/RegisterInstitute";
+import NotFound from "./pages/NotFound";
+import Courses from "./components/Courses";
+import useIdleTimer from "./services/useIdleTimer"; // Import your custom hook
 
-const App = () => (
-  <Routes>
-    <Route path="/" element={<Home />} />
-+   <Route path="/register" element={<RegisterInstitute />} />
+const App = () => {
+  useIdleTimer(); // Call the hook here to start monitoring user activity
 
-    <Route path="/login" element={<Login />} />
-    <Route path="*" element={<NotFound />} />
-  </Routes>
-);
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/register" element={<RegisterInstitute />} />
+      <Route path="/courses" element={<Courses />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
 
 export default App;

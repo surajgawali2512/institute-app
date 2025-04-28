@@ -1,18 +1,49 @@
-// src/pages/Login.jsx
-import React, { useState } from 'react';
-import './Login.css';
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import "./Login.css";
 
 const Login = () => {
-  const [form, setForm] = useState({ username: '', password: '' });
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ username: "", password: "" });
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Login submitted:", form);
-    // Add login logic or API call here
+    try {
+      console.log("Login submitted:", form);
+
+      const response = await axios.post(
+        "http://localhost:8081/institutions/login",
+        null, // 👈 no body
+        {
+          params: {
+            email: form.username, // 👈 match backend param names
+            password: form.password,
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        // ✅ Save only the email in sessionStorage
+        sessionStorage.setItem("username", response.data.username);
+        console.log(sessionStorage.getItem("username"));
+        //If Want the All Object data in the sessionStorage then it required
+        // sessionStorage.setItem('user', JSON.stringify(response.data));
+
+        alert("Login successful!");
+        navigate("/");
+      } else {
+        setError("Login failed");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("Login failed");
+    }
   };
 
   return (
@@ -22,7 +53,7 @@ const Login = () => {
         <input
           type="text"
           name="username"
-          placeholder="Username"
+          placeholder="Username (email)"
           value={form.username}
           onChange={handleChange}
           required
@@ -36,6 +67,7 @@ const Login = () => {
           required
         />
         <button type="submit">Login</button>
+        {error && <p className="error">{error}</p>}
       </form>
     </div>
   );
