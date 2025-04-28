@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 
 export default function useIdleTimer(timeout = 5 * 60 * 1000) {
-  // 5 min
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -12,8 +12,16 @@ export default function useIdleTimer(timeout = 5 * 60 * 1000) {
       clearTimeout(timer);
       timer = setTimeout(() => {
         sessionStorage.clear();
-        alert("You have been logged out due to inactivity.");
-        navigate("/login");
+        // Using SweetAlert2 instead of the alert
+        Swal.fire({
+          icon: "warning",
+          title: "Logged Out",
+          text: "You have been logged out due to inactivity.",
+          confirmButtonColor: "#3085d6",
+          confirmButtonText: "OK",
+        }).then(() => {
+          navigate("/login");
+        });
       }, timeout);
     };
 

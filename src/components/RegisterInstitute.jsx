@@ -165,9 +165,6 @@ export default function RegisterInstitute() {
   return (
     <div className="register-container">
       {/* 👇 Back Button */}
-      <button className="back-button" onClick={() => navigate("/")}>
-        ← Back
-      </button>
 
       <form className="reg-form" onSubmit={handleSubmit}>
         <h2>Register Institute</h2>
@@ -280,6 +277,9 @@ export default function RegisterInstitute() {
 
         <div className="form-submit">
           <button type="submit">Register</button>
+          <button className="back-button" onClick={() => navigate("/")}>
+            ← Back
+          </button>
         </div>
       </form>
     </div>
