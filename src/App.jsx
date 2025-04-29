@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import RegisterInstitute from "./components/RegisterInstitute";
 import NotFound from "./pages/NotFound";
 import Courses from "./components/Courses";
+import ChoosePlan from "./components/ChoosePlan";
 import useIdleTimer from "./services/useIdleTimer"; // Import your custom hook
 
 const App = () => {
@@ -18,6 +19,7 @@ const App = () => {
       <Route path="/courses" element={<Courses />} />
       <Route path="/login" element={<Login />} />
       <Route path="*" element={<NotFound />} />
+      <Route path="/choose-plan" element={<ChoosePlan />} />
     </Routes>
   );
 };
