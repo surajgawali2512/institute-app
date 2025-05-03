@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "./RegisterInstitute.css";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../services/axiosInstance"; 
+import axiosInstance from "../services/axiosInstance";
 
 export default function RegisterInstitute() {
   const navigate = useNavigate();
@@ -12,7 +12,7 @@ export default function RegisterInstitute() {
     email: "",
     phone: "",
     username: "",
-    password: ""
+    password: "",
   });
 
   const [error, setError] = useState("");
@@ -116,9 +116,22 @@ export default function RegisterInstitute() {
 
         <div className="form-submit">
           <button type="submit">Register</button>
-          <button className="back-button" type="button" onClick={() => navigate("/")}>
+          <button
+            className="back-button"
+            type="button"
+            onClick={() => navigate("/")}
+          >
             ← Back
           </button>
+        </div>
+
+        <div className="signin-link">
+          <p>
+            Already have an account?{" "}
+            <span className="signin-text" onClick={() => navigate("/login")}>
+              Sign in
+            </span>
+          </p>
         </div>
       </form>
     </div>

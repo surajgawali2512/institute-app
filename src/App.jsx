@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound";
 import Courses from "./components/Courses";
 import ChoosePlan from "./components/ChoosePlan";
 import useIdleTimer from "./services/useIdleTimer"; // Import your custom hook
+import Dashboard from "./pages/Dashboard";
 
 const App = () => {
   useIdleTimer(); // Call the hook here to start monitoring user activity
@@ -15,6 +16,7 @@ const App = () => {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/register" element={<RegisterInstitute />} />
       <Route path="/courses" element={<Courses />} />
       <Route path="/login" element={<Login />} />

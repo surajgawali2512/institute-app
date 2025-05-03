@@ -10,7 +10,7 @@ export default function ChoosePlan() {
     try {
       const email = sessionStorage.getItem("email");
       if (!email) {
-        alert("No email found in session. Please log in again.");
+        alert("Error Occured Please try again.");
         return;
       }
 
@@ -20,10 +20,11 @@ export default function ChoosePlan() {
 
       const updatePayload = {
         startDate: currentDate.toISOString(),
-        endDate: endDate.toISOString()
+        endDate: endDate.toISOString(),
+        status: "Active",
       };
 
-      const response = await axiosInstance.post(
+      const response = await axiosInstance.put(
         `/institutions/update?email=${email}`,
         updatePayload
       );

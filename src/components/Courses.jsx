@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from "react";
 import axiosInstance from "../services/axiosInstance";
 import Swal from "sweetalert2";
+import "./Courses.css";
 
 const Courses = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentCourseId, setCurrentCourseId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
   const [newCourse, setNewCourse] = useState({
     name: "",
     code: "",
@@ -20,12 +25,10 @@ const Courses = () => {
         const response = await axiosInstance.get("/course/get");
         setCourses(response.data);
       } catch (error) {
-        console.error("Error fetching courses:", error);
-        if (error.response && error.response.data) {
-          setError(error.response.data.message);
-        } else {
-          setError("Server not reachable or internal error");
-        }
+        setError(
+          error.response?.data?.message ||
+            "Server not reachable or internal error"
+        );
       } finally {
         setLoading(false);
       }
@@ -34,15 +37,36 @@ const Courses = () => {
     fetchCourses();
   }, []);
 
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      const fetchByName = async () => {
+        if (searchTerm.length >= 1) {
+          try {
+            const response = await axiosInstance.post(
+              `/course/getByName/${searchTerm}`
+            );
+            setCourses(response.data); // now expects list, not single course
+          } catch (error) {
+            setCourses([]);
+          }
+        } else {
+          const res = await axiosInstance.get("/course/get");
+          setCourses(res.data);
+        }
+      };
+
+      fetchByName();
+    }, 500); // debounce
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm]);
+
   const handleAddCourse = async (e) => {
     e.preventDefault();
     try {
-      const payload = {
-        ...newCourse,
-        duration: Number(newCourse.duration),
-      };
+      const payload = { ...newCourse, duration: Number(newCourse.duration) };
       const response = await axiosInstance.post("/course/add", payload);
-      setCourses([...courses, response.data]);
+      setCourses((prev) => [...prev, response.data]);
       setShowPopup(false);
       setNewCourse({ name: "", code: "", duration: "", description: "" });
 
@@ -54,7 +78,6 @@ const Courses = () => {
         showConfirmButton: false,
       });
     } catch (error) {
-      console.error("Error adding course:", error);
       Swal.fire({
         icon: "error",
         title: "Error",
@@ -77,8 +100,7 @@ const Courses = () => {
     if (result.isConfirmed) {
       try {
         await axiosInstance.post(`/course/delete/${id}`);
-        setCourses(courses.filter((course) => course.id !== id));
-
+        setCourses((prev) => prev.filter((course) => course.id !== id));
         Swal.fire({
           icon: "success",
           title: "Deleted!",
@@ -87,7 +109,6 @@ const Courses = () => {
           showConfirmButton: false,
         });
       } catch (error) {
-        console.error("Error deleting course:", error);
         Swal.fire({
           icon: "error",
           title: "Error",
@@ -96,95 +117,139 @@ const Courses = () => {
       }
     }
   };
+  const openAddPopup = () => {
+    setIsEditing(false);
+    setNewCourse({ name: "", code: "", duration: "", description: "" });
+    setShowPopup(true);
+  };
 
-  //this code is for the alert and above was for sweet alert
-  // const handleAddCourse = async (e) => {
-  //   e.preventDefault();
-  //   try {
-  //     const payload = {
-  //       ...newCourse,
-  //       duration: Number(newCourse.duration),
-  //     };
-  //     const response = await axiosInstance.post("/course/add", payload);
-  //     setCourses([...courses, response.data]);
-  //     setShowPopup(false);
-  //     setNewCourse({ name: "", code: "", duration: "", description: "" });
-  //   } catch (error) {
-  //     console.error("Error adding course:", error);
-  //     alert("Failed to add course");
-  //   }
-  // };
-  // const handleDeleteCourse = async (id) => {
-  //   if (window.confirm("Are you sure you want to delete this course?")) {
-  //     try {
-  //       await axiosInstance.post(`/course/delete/${id}`); // POST request instead of DELETE
-  //       setCourses(courses.filter((course) => course.id !== id));
-  //     } catch (error) {
-  //       console.error("Error deleting course:", error);
-  //       alert("Failed to delete course");
-  //     }
-  //   }
-  // };
+  const openEditPopup = (course) => {
+    setIsEditing(true);
+    setCurrentCourseId(course.id);
+    setNewCourse({
+      name: course.name,
+      code: course.code,
+      duration: course.duration,
+      description: course.description,
+    });
+    setShowPopup(true);
+  };
 
-  if (loading) {
-    return <p style={styles.loading}>Loading courses...</p>;
-  }
+  const handleAddOrUpdateCourse = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = { ...newCourse, duration: Number(newCourse.duration) };
 
-  if (error) {
-    return <p style={styles.error}>Error: {error}</p>;
-  }
+      if (isEditing) {
+        const response = await axiosInstance.put(
+          `/course/update/${currentCourseId}`,
+          payload
+        );
+        setCourses((prev) =>
+          prev.map((c) => (c.id === currentCourseId ? response.data : c))
+        );
+        Swal.fire({
+          icon: "success",
+          title: "Updated",
+          text: "Course updated successfully!",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } else {
+        const response = await axiosInstance.post("/course/add", payload);
+        setCourses((prev) => [...prev, response.data]);
+        Swal.fire({
+          icon: "success",
+          title: "Added",
+          text: "Course added successfully!",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      }
 
-  if (courses.length === 0) {
-    return <p style={styles.noCourses}>No courses found</p>;
-  }
+      setShowPopup(false);
+      setNewCourse({ name: "", code: "", duration: "", description: "" });
+      setCurrentCourseId(null);
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: isEditing ? "Failed to update course!" : "Failed to add course!",
+      });
+    }
+  };
 
   return (
-    <div style={styles.container}>
-      <h1 style={styles.title}>Available Courses</h1>
-      <button style={styles.addButton} onClick={() => setShowPopup(true)}>
+    <div className="courses-container">
+      <h1 className="courses-title">Available Courses</h1>
+
+      {/* 🔍 Search Box */}
+      <input
+        type="text"
+        className="search-input"
+        placeholder="Search by course name..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
+
+      <button className="add-button" onClick={openAddPopup}>
         Add Course
       </button>
-      <div style={{ overflowX: "auto" }}>
-        <table style={styles.table}>
-          <thead>
-            <tr>
-              <th style={styles.th}>Course ID</th>
-              <th style={styles.th}>Name</th>
-              <th style={styles.th}>Code</th>
-              <th style={styles.th}>Duration</th>
-              <th style={styles.th}>Description</th>
-              <th style={styles.th}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {courses.map((course) => (
-              <tr key={course.id} style={styles.tr}>
-                <td style={styles.td}>{course.id}</td>
-                <td style={styles.td}>{course.name}</td>
-                <td style={styles.td}>{course.code}</td>
-                <td style={styles.td}>{course.duration}</td>
-                <td style={styles.td}>{course.description}</td>
-                <td style={styles.td}>
-                  <button
-                    style={styles.deleteButton}
-                    onClick={() => handleDeleteCourse(course.id)}
-                  >
-                    Delete
-                  </button>
-                </td>
+
+      {loading ? (
+        <p className="loading">Loading courses...</p>
+      ) : error ? (
+        <p className="error">Error: {error}</p>
+      ) : courses.length === 0 ? (
+        <p className="no-courses">No courses found</p>
+      ) : (
+        <div className="table-container">
+          <table className="courses-table">
+            <thead>
+              <tr>
+                <th>Course ID</th>
+                <th>Name</th>
+                <th>Code</th>
+                <th>Duration</th>
+                <th>Description</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {courses.map((course) => (
+                <tr key={course.id}>
+                  <td>{course.id}</td>
+                  <td>{course.name}</td>
+                  <td>{course.code}</td>
+                  <td>{course.duration}</td>
+                  <td>{course.description}</td>
+                  <td>
+                    <button
+                      className="edit-button"
+                      onClick={() => openEditPopup(course)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="delete-button"
+                      onClick={() => handleDeleteCourse(course.id)}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {showPopup && (
-        <div style={styles.popupOverlay}>
-          <div style={styles.popup}>
-            <h2>Add New Course</h2>
-            <form onSubmit={handleAddCourse}>
+        <div className="popup-overlay">
+          <div className="popup">
+            <h2>{isEditing ? "Update Course" : "Add New Course"}</h2>
+            <form onSubmit={handleAddOrUpdateCourse}>
               <input
-                style={styles.input}
                 type="text"
                 placeholder="Name"
                 value={newCourse.name}
@@ -194,7 +259,6 @@ const Courses = () => {
                 required
               />
               <input
-                style={styles.input}
                 type="text"
                 placeholder="Code"
                 value={newCourse.code}
@@ -204,7 +268,6 @@ const Courses = () => {
                 required
               />
               <input
-                style={styles.input}
                 type="number"
                 placeholder="Duration (in years)"
                 value={newCourse.duration}
@@ -214,7 +277,6 @@ const Courses = () => {
                 required
               />
               <textarea
-                style={styles.input}
                 placeholder="Description"
                 value={newCourse.description}
                 onChange={(e) =>
@@ -222,13 +284,13 @@ const Courses = () => {
                 }
                 required
               />
-              <div style={styles.buttonGroup}>
-                <button type="submit" style={styles.saveButton}>
-                  Add
+              <div className="button-group">
+                <button type="submit" className="save-button">
+                  {isEditing ? "Update" : "Add"}
                 </button>
                 <button
                   type="button"
-                  style={styles.cancelButton}
+                  className="cancel-button"
                   onClick={() => setShowPopup(false)}
                 >
                   Cancel
@@ -242,118 +304,536 @@ const Courses = () => {
   );
 };
 
-const styles = {
-  container: {
-    maxWidth: "1000px",
-    margin: "auto",
-    padding: "20px",
-  },
-  title: {
-    textAlign: "center",
-    marginBottom: "20px",
-    fontSize: "2rem",
-    color: "#333",
-  },
-  table: {
-    width: "100%",
-    borderCollapse: "collapse",
-    boxShadow: "0 0 10px rgba(0,0,0,0.1)",
-  },
-  th: {
-    backgroundColor: "#4CAF50",
-    color: "white",
-    padding: "12px",
-    textAlign: "left",
-  },
-  tr: {
-    borderBottom: "1px solid #ddd",
-  },
-  td: {
-    padding: "12px",
-    textAlign: "left",
-  },
-  loading: {
-    textAlign: "center",
-    marginTop: "50px",
-    fontSize: "18px",
-  },
-  error: {
-    textAlign: "center",
-    marginTop: "50px",
-    color: "red",
-    fontSize: "18px",
-  },
-  noCourses: {
-    textAlign: "center",
-    marginTop: "50px",
-    fontSize: "18px",
-  },
-  addButton: {
-    backgroundColor: "#4CAF50",
-    color: "white",
-    border: "none",
-    padding: "10px 20px",
-    marginBottom: "10px",
-    cursor: "pointer",
-    borderRadius: "5px",
-    fontSize: "16px",
-  },
-  deleteButton: {
-    backgroundColor: "red",
-    color: "white",
-    border: "none",
-    padding: "6px 12px",
-    cursor: "pointer",
-    borderRadius: "5px",
-    fontSize: "14px",
-  },
-  popupOverlay: {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  popup: {
-    backgroundColor: "white",
-    padding: "30px",
-    borderRadius: "10px",
-    width: "400px",
-    boxShadow: "0 0 15px rgba(0,0,0,0.3)",
-  },
-  input: {
-    width: "100%",
-    padding: "10px",
-    marginBottom: "10px",
-    borderRadius: "5px",
-    border: "1px solid #ccc",
-  },
-  buttonGroup: {
-    display: "flex",
-    justifyContent: "space-between",
-  },
-  saveButton: {
-    backgroundColor: "#4CAF50",
-    color: "white",
-    border: "none",
-    padding: "10px 20px",
-    cursor: "pointer",
-    borderRadius: "5px",
-    fontSize: "16px",
-  },
-  cancelButton: {
-    backgroundColor: "#ccc",
-    color: "black",
-    border: "none",
-    padding: "10px 20px",
-    cursor: "pointer",
-    borderRadius: "5px",
-    fontSize: "16px",
-  },
-};
-
 export default Courses;
+
+//if is with search Functionality but with at least 3 char search is work else not
+// import React, { useState, useEffect } from "react";
+// import axiosInstance from "../services/axiosInstance";
+// import Swal from "sweetalert2";
+// import "./Courses.css";
+
+// const Courses = () => {
+//   const [courses, setCourses] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState(null);
+//   const [showPopup, setShowPopup] = useState(false);
+//   const [isEditing, setIsEditing] = useState(false);
+//   const [currentCourseId, setCurrentCourseId] = useState(null);
+//   const [searchTerm, setSearchTerm] = useState("");
+//   const [newCourse, setNewCourse] = useState({
+//     name: "",
+//     code: "",
+//     duration: "",
+//     description: "",
+//   });
+
+//   useEffect(() => {
+//     fetchCourses();
+//   }, []);
+
+//   const fetchCourses = async () => {
+//     try {
+//       setLoading(true);
+//       const response = await axiosInstance.get("/course/get");
+//       setCourses(response.data);
+//       setError(null);
+//     } catch (error) {
+//       setError(
+//         error.response?.data?.message ||
+//           "Server not reachable or internal error"
+//       );
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   // Real-time search effect with debounce
+//   useEffect(() => {
+//     const delayDebounce = setTimeout(() => {
+//       if (searchTerm.trim() === "") {
+//         fetchCourses();
+//       } else {
+//         searchCourseByName(searchTerm);
+//       }
+//     }, 500);
+
+//     return () => clearTimeout(delayDebounce);
+//   }, [searchTerm]);
+
+//   const searchCourseByName = async (name) => {
+//     try {
+//       const response = await axiosInstance.post(`/course/getByName/${name}`);
+//       setCourses(response.data ? [response.data] : []);
+//       setError(null);
+//     } catch (error) {
+//       setCourses([]);
+//       setError("Course not found");
+//     }
+//   };
+
+//   const openAddPopup = () => {
+//     setIsEditing(false);
+//     setNewCourse({ name: "", code: "", duration: "", description: "" });
+//     setShowPopup(true);
+//   };
+
+//   const openEditPopup = (course) => {
+//     setIsEditing(true);
+//     setCurrentCourseId(course.id);
+//     setNewCourse({
+//       name: course.name,
+//       code: course.code,
+//       duration: course.duration,
+//       description: course.description,
+//     });
+//     setShowPopup(true);
+//   };
+
+//   const handleAddOrUpdateCourse = async (e) => {
+//     e.preventDefault();
+//     try {
+//       const payload = { ...newCourse, duration: Number(newCourse.duration) };
+
+//       if (isEditing) {
+//         const response = await axiosInstance.put(
+//           `/course/update/${currentCourseId}`,
+//           payload
+//         );
+//         setCourses((prev) =>
+//           prev.map((c) => (c.id === currentCourseId ? response.data : c))
+//         );
+//         Swal.fire({
+//           icon: "success",
+//           title: "Updated",
+//           text: "Course updated successfully!",
+//           timer: 2000,
+//           showConfirmButton: false,
+//         });
+//       } else {
+//         const response = await axiosInstance.post("/course/add", payload);
+//         setCourses((prev) => [...prev, response.data]);
+//         Swal.fire({
+//           icon: "success",
+//           title: "Added",
+//           text: "Course added successfully!",
+//           timer: 2000,
+//           showConfirmButton: false,
+//         });
+//       }
+
+//       setShowPopup(false);
+//       setNewCourse({ name: "", code: "", duration: "", description: "" });
+//       setCurrentCourseId(null);
+//     } catch (error) {
+//       Swal.fire({
+//         icon: "error",
+//         title: "Error",
+//         text: isEditing ? "Failed to update course!" : "Failed to add course!",
+//       });
+//     }
+//   };
+
+//   const handleDeleteCourse = async (id) => {
+//     const result = await Swal.fire({
+//       title: "Are you sure?",
+//       text: "You won't be able to revert this!",
+//       icon: "warning",
+//       showCancelButton: true,
+//       confirmButtonColor: "#3085d6",
+//       cancelButtonColor: "#d33",
+//       confirmButtonText: "Yes, delete it!",
+//     });
+
+//     if (result.isConfirmed) {
+//       try {
+//         await axiosInstance.post(`/course/delete/${id}`);
+//         setCourses((prev) => prev.filter((course) => course.id !== id));
+//         Swal.fire({
+//           icon: "success",
+//           title: "Deleted!",
+//           text: "Course has been deleted.",
+//           timer: 2000,
+//           showConfirmButton: false,
+//         });
+//       } catch (error) {
+//         Swal.fire({
+//           icon: "error",
+//           title: "Error",
+//           text: "Failed to delete course!",
+//         });
+//       }
+//     }
+//   };
+
+//   return (
+//     <div className="courses-container">
+//       <h1 className="courses-title">Available Courses</h1>
+
+//       {/* 🔍 Search Box */}
+//       <input
+//         type="text"
+//         className="search-input"
+//         placeholder="Search by course name..."
+//         value={searchTerm}
+//         onChange={(e) => setSearchTerm(e.target.value)}
+//       />
+
+//       <button className="add-button" onClick={openAddPopup}>
+//         Add Course
+//       </button>
+
+//       {loading ? (
+//         <p className="loading">Loading courses...</p>
+//       ) : error ? (
+//         <p className="error">Error: {error}</p>
+//       ) : courses.length === 0 ? (
+//         <p className="no-courses">No courses found</p>
+//       ) : (
+//         <div className="table-container">
+//           <table className="courses-table">
+//             <thead>
+//               <tr>
+//                 <th>Course ID</th>
+//                 <th>Name</th>
+//                 <th>Code</th>
+//                 <th>Duration</th>
+//                 <th>Description</th>
+//                 <th>Actions</th>
+//               </tr>
+//             </thead>
+//             <tbody>
+//               {courses.map((course) => (
+//                 <tr key={course.id}>
+//                   <td>{course.id}</td>
+//                   <td>{course.name}</td>
+//                   <td>{course.code}</td>
+//                   <td>{course.duration}</td>
+//                   <td>{course.description}</td>
+//                   <td>
+//                     <button
+//                       className="edit-button"
+//                       onClick={() => openEditPopup(course)}
+//                     >
+//                       Edit
+//                     </button>
+//                     <button
+//                       className="delete-button"
+//                       onClick={() => handleDeleteCourse(course.id)}
+//                     >
+//                       Delete
+//                     </button>
+//                   </td>
+//                 </tr>
+//               ))}
+//             </tbody>
+//           </table>
+//         </div>
+//       )}
+
+//       {showPopup && (
+//         <div className="popup-overlay">
+//           <div className="popup">
+//             <h2>{isEditing ? "Update Course" : "Add New Course"}</h2>
+//             <form onSubmit={handleAddOrUpdateCourse}>
+//               <input
+//                 type="text"
+//                 placeholder="Name"
+//                 value={newCourse.name}
+//                 onChange={(e) =>
+//                   setNewCourse({ ...newCourse, name: e.target.value })
+//                 }
+//                 required
+//               />
+//               <input
+//                 type="text"
+//                 placeholder="Code"
+//                 value={newCourse.code}
+//                 onChange={(e) =>
+//                   setNewCourse({ ...newCourse, code: e.target.value })
+//                 }
+//                 required
+//               />
+//               <input
+//                 type="number"
+//                 placeholder="Duration (in years)"
+//                 value={newCourse.duration}
+//                 onChange={(e) =>
+//                   setNewCourse({ ...newCourse, duration: e.target.value })
+//                 }
+//                 required
+//               />
+//               <textarea
+//                 placeholder="Description"
+//                 value={newCourse.description}
+//                 onChange={(e) =>
+//                   setNewCourse({ ...newCourse, description: e.target.value })
+//                 }
+//                 required
+//               />
+//               <div className="button-group">
+//                 <button type="submit" className="save-button">
+//                   {isEditing ? "Update" : "Add"}
+//                 </button>
+//                 <button
+//                   type="button"
+//                   className="cancel-button"
+//                   onClick={() => setShowPopup(false)}
+//                 >
+//                   Cancel
+//                 </button>
+//               </div>
+//             </form>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default Courses;
+
+//Without Search Functionality
+// import React, { useState, useEffect } from "react";
+// import axiosInstance from "../services/axiosInstance";
+// import Swal from "sweetalert2";
+// import "./Courses.css";
+
+// const Courses = () => {
+//   const [courses, setCourses] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState(null);
+//   const [showPopup, setShowPopup] = useState(false);
+//   const [isEditing, setIsEditing] = useState(false);
+//   const [currentCourseId, setCurrentCourseId] = useState(null);
+//   const [newCourse, setNewCourse] = useState({
+//     name: "",
+//     code: "",
+//     duration: "",
+//     description: "",
+//   });
+
+//   useEffect(() => {
+//     const fetchCourses = async () => {
+//       try {
+//         const response = await axiosInstance.get("/course/get");
+//         setCourses(response.data);
+//       } catch (error) {
+//         setError(
+//           error.response?.data?.message ||
+//             "Server not reachable or internal error"
+//         );
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchCourses();
+//   }, []);
+
+//   const openAddPopup = () => {
+//     setIsEditing(false);
+//     setNewCourse({ name: "", code: "", duration: "", description: "" });
+//     setShowPopup(true);
+//   };
+
+//   const openEditPopup = (course) => {
+//     setIsEditing(true);
+//     setCurrentCourseId(course.id);
+//     setNewCourse({
+//       name: course.name,
+//       code: course.code,
+//       duration: course.duration,
+//       description: course.description,
+//     });
+//     setShowPopup(true);
+//   };
+
+//   const handleAddOrUpdateCourse = async (e) => {
+//     e.preventDefault();
+//     try {
+//       const payload = { ...newCourse, duration: Number(newCourse.duration) };
+
+//       if (isEditing) {
+//         const response = await axiosInstance.put(
+//           `/course/update/${currentCourseId}`,
+//           payload
+//         );
+//         setCourses((prev) =>
+//           prev.map((c) => (c.id === currentCourseId ? response.data : c))
+//         );
+//         Swal.fire({
+//           icon: "success",
+//           title: "Updated",
+//           text: "Course updated successfully!",
+//           timer: 2000,
+//           showConfirmButton: false,
+//         });
+//       } else {
+//         const response = await axiosInstance.post("/course/add", payload);
+//         setCourses((prev) => [...prev, response.data]);
+//         Swal.fire({
+//           icon: "success",
+//           title: "Added",
+//           text: "Course added successfully!",
+//           timer: 2000,
+//           showConfirmButton: false,
+//         });
+//       }
+
+//       setShowPopup(false);
+//       setNewCourse({ name: "", code: "", duration: "", description: "" });
+//       setCurrentCourseId(null);
+//     } catch (error) {
+//       Swal.fire({
+//         icon: "error",
+//         title: "Error",
+//         text: isEditing ? "Failed to update course!" : "Failed to add course!",
+//       });
+//     }
+//   };
+
+//   const handleDeleteCourse = async (id) => {
+//     const result = await Swal.fire({
+//       title: "Are you sure?",
+//       text: "You won't be able to revert this!",
+//       icon: "warning",
+//       showCancelButton: true,
+//       confirmButtonColor: "#3085d6",
+//       cancelButtonColor: "#d33",
+//       confirmButtonText: "Yes, delete it!",
+//     });
+
+//     if (result.isConfirmed) {
+//       try {
+//         await axiosInstance.post(`/course/delete/${id}`);
+//         setCourses((prev) => prev.filter((course) => course.id !== id));
+//         Swal.fire({
+//           icon: "success",
+//           title: "Deleted!",
+//           text: "Course has been deleted.",
+//           timer: 2000,
+//           showConfirmButton: false,
+//         });
+//       } catch (error) {
+//         Swal.fire({
+//           icon: "error",
+//           title: "Error",
+//           text: "Failed to delete course!",
+//         });
+//       }
+//     }
+//   };
+
+//   if (loading) return <p className="loading">Loading courses...</p>;
+//   if (error) return <p className="error">Error: {error}</p>;
+//   if (courses.length === 0)
+//     return <p className="no-courses">No courses found</p>;
+
+//   return (
+//     <div className="courses-container">
+//       <h1 className="courses-title">Available Courses</h1>
+//       <button className="add-button" onClick={openAddPopup}>
+//         Add Course
+//       </button>
+
+//       <div className="table-container">
+//         <table className="courses-table">
+//           <thead>
+//             <tr>
+//               <th>Course ID</th>
+//               <th>Name</th>
+//               <th>Code</th>
+//               <th>Duration</th>
+//               <th>Description</th>
+//               <th>Actions</th>
+//             </tr>
+//           </thead>
+//           <tbody>
+//             {courses.map((course) => (
+//               <tr key={course.id}>
+//                 <td>{course.id}</td>
+//                 <td>{course.name}</td>
+//                 <td>{course.code}</td>
+//                 <td>{course.duration}</td>
+//                 <td>{course.description}</td>
+//                 <td>
+//                   <button
+//                     className="edit-button"
+//                     onClick={() => openEditPopup(course)}
+//                   >
+//                     Edit
+//                   </button>
+//                   <button
+//                     className="delete-button"
+//                     onClick={() => handleDeleteCourse(course.id)}
+//                   >
+//                     Delete
+//                   </button>
+//                 </td>
+//               </tr>
+//             ))}
+//           </tbody>
+//         </table>
+//       </div>
+
+//       {showPopup && (
+//         <div className="popup-overlay">
+//           <div className="popup">
+//             <h2>{isEditing ? "Update Course" : "Add New Course"}</h2>
+//             <form onSubmit={handleAddOrUpdateCourse}>
+//               <input
+//                 type="text"
+//                 placeholder="Name"
+//                 value={newCourse.name}
+//                 onChange={(e) =>
+//                   setNewCourse({ ...newCourse, name: e.target.value })
+//                 }
+//                 required
+//               />
+//               <input
+//                 type="text"
+//                 placeholder="Code"
+//                 value={newCourse.code}
+//                 onChange={(e) =>
+//                   setNewCourse({ ...newCourse, code: e.target.value })
+//                 }
+//                 required
+//               />
+//               <input
+//                 type="number"
+//                 placeholder="Duration (in years)"
+//                 value={newCourse.duration}
+//                 onChange={(e) =>
+//                   setNewCourse({ ...newCourse, duration: e.target.value })
+//                 }
+//                 required
+//               />
+//               <textarea
+//                 placeholder="Description"
+//                 value={newCourse.description}
+//                 onChange={(e) =>
+//                   setNewCourse({ ...newCourse, description: e.target.value })
+//                 }
+//                 required
+//               />
+//               <div className="button-group">
+//                 <button type="submit" className="save-button">
+//                   {isEditing ? "Update" : "Add"}
+//                 </button>
+//                 <button
+//                   type="button"
+//                   className="cancel-button"
+//                   onClick={() => setShowPopup(false)}
+//                 >
+//                   Cancel
+//                 </button>
+//               </div>
+//             </form>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default Courses;
