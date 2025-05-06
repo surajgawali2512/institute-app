@@ -11,7 +11,7 @@ const Home = () => (
     {/* Hero Section */}
     <section className="hero">
       <div className="hero-content">
-        <h1>Institute Management System</h1>
+        <h1>AcademiaTech Management</h1>
         <p>
           Manage students, teachers, attendance, fees, exams and more — all in
           one place.

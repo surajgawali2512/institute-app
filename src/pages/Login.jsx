@@ -1,20 +1,24 @@
-// import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import "./Login.css";
 import Swal from "sweetalert2";
 import axiosInstance from "../services/axiosInstance";
+import { FaEye, FaEyeSlash } from "react-icons/fa"; // 👈 Import icons
 
 const Login = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // 👈 Add toggle state
+  const [isLoading, setIsLoading] = useState(false); // Add loading state
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true); // Start loading animation
     try {
       const response = await axiosInstance.post("/institutions/login", null, {
         params: {
@@ -38,92 +42,72 @@ const Login = () => {
         }).then(() => {
           navigate("/dashboard");
         });
-        // Swal.fire({
-        //   title: "Success!",
-        //   text: "Successfully logged in to your account.",
-        //   icon: "success",
-        //   confirmButtonText: "OK",
-        // }).then(() => {
-        //   navigate("/dashboard");
-        // });
       } else {
-        setError("Login failed");
+        setError("Login failed. Please check your credentials.");
       }
     } catch (err) {
       console.error("Login error:", err);
-      setError("Login failed");
+      setError("Login failed. Please check your credentials.");
+    } finally {
+      setIsLoading(false); // Stop loading animation
     }
   };
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   try {
-  //     console.log("Login submitted:", form);
-
-  //     // const response = await axios.post(
-  //     //   "http://localhost:8081/institutions/login",
-  //     //   null, // 👈 no body
-  //     //   {
-  //     //     params: {
-  //     //       email: form.username, // 👈 match backend param names
-  //     //       password: form.password,
-  //     //     },
-  //     //   }
-  //     // );
-
-  //     const response = await axiosInstance.post(
-  //       "/institutions/login",
-  //       null, // No body; using query params
-  //       {
-  //         params: {
-  //           email: form.username,
-  //           password: form.password,
-  //         },
-  //       }
-  //     );
-  //     if (response.status === 200) {
-  //       // ✅ Save only the email in sessionStorage
-  //       sessionStorage.setItem("username", response.data.username);
-  //       console.log(sessionStorage.getItem("username"));
-  //       localStorage.setItem("token", "true"); // Or use a real token if available
-
-  //       //If Want the All Object data in the sessionStorage then it required
-  //       // sessionStorage.setItem('user', JSON.stringify(response.data));
-
-  //       alert("Login successful!");
-  //       navigate("/dashboard");
-  //     } else {
-  //       setError("Login failed");
-  //     }
-  //   } catch (err) {
-  //     console.error("Login error:", err);
-  //     setError("Login failed");
-  //   }
-  // };
-
   return (
     <div className="login-container">
-      <form className="login-form" onSubmit={handleSubmit}>
+      <div className="login-box">
         <h2>Login</h2>
-        <input
-          type="text"
-          name="username"
-          placeholder="Username (email)"
-          value={form.username}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={handleChange}
-          required
-        />
-        <button type="submit">Login</button>
-        {error && <p className="error">{error}</p>}
-      </form>
+        <form className="login-form" onSubmit={handleSubmit}>
+          <input
+            type="text"
+            name="username"
+            placeholder="Username (email)"
+            value={form.username}
+            onChange={handleChange}
+            required
+            className="input-field"
+          />
+
+          <div className="password-wrapper">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Password"
+              value={form.password}
+              onChange={handleChange}
+              required
+              className="input-field"
+            />
+            <span
+              className="eye-icon"
+              onClick={() => setShowPassword((prev) => !prev)}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </span>
+          </div>
+
+          {isLoading ? (
+            <button className="btn loading" disabled>
+              Logging in...
+            </button>
+          ) : (
+            <button type="submit" className="btn">
+              Login
+            </button>
+          )}
+
+          {error && <p className="error">{error}</p>}
+
+          <div className="options">
+            <span onClick={() => navigate("/forgot-password")} className="forgot-password">
+              Forgot Password?
+            </span>
+            <span onClick={() => navigate("/register")} className="signup">
+              Don't have an account? Sign Up
+            </span>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

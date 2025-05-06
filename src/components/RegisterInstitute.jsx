@@ -47,10 +47,10 @@ export default function RegisterInstitute() {
 
   return (
     <div className="register-container">
-      <form className="reg-form" onSubmit={handleSubmit}>
+      <div className="register-box">
         <h2>Register Institute</h2>
         {error && <p className="error">{error}</p>}
-        <div className="form-grid">
+        <form className="reg-form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Name</label>
             <input
@@ -112,28 +112,32 @@ export default function RegisterInstitute() {
               required
             />
           </div>
-        </div>
 
-        <div className="form-submit">
-          <button type="submit">Register</button>
-          <button
-            className="back-button"
-            type="button"
-            onClick={() => navigate("/")}
-          >
-            ← Back
-          </button>
-        </div>
+          <div className="form-submit">
+            <button type="submit" className="btn">Register</button>
+            <button
+              className="back-button"
+              type="button"
+              onClick={() => navigate("/login")}
+            >
+              ← Back
+            </button>
+          </div>
+        </form>
 
+        {/* Add a login option for already registered users */}
         <div className="signin-link">
           <p>
             Already have an account?{" "}
-            <span className="signin-text" onClick={() => navigate("/login")}>
-              Sign in
+            <span
+              className="signin-text"
+              onClick={() => navigate("/login")}
+            >
+              Login
             </span>
           </p>
         </div>
-      </form>
+      </div>
     </div>
   );
 }
