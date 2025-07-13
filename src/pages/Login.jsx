@@ -3,14 +3,15 @@ import { useState } from "react";
 import "./Login.css";
 import Swal from "sweetalert2";
 import axiosInstance from "../services/axiosInstance";
-import { FaEye, FaEyeSlash } from "react-icons/fa"; // 👈 Import icons
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { IoArrowBack } from "react-icons/io5";
 
 const Login = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // 👈 Add toggle state
-  const [isLoading, setIsLoading] = useState(false); // Add loading state
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -18,7 +19,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true); // Start loading animation
+    setIsLoading(true);
     try {
       const response = await axiosInstance.post("/institutions/login", null, {
         params: {
@@ -49,14 +50,20 @@ const Login = () => {
       console.error("Login error:", err);
       setError("Login failed. Please check your credentials.");
     } finally {
-      setIsLoading(false); // Stop loading animation
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="login-container">
       <div className="login-box">
-        <h2>Login</h2>
+        {/* ✅ Back button now navigates to Home */}
+        <button className="back-button" onClick={() => navigate("/")}>
+          <IoArrowBack /> Back
+        </button>
+
+        <h2>Welcome Back!</h2>
+
         <form className="login-form" onSubmit={handleSubmit}>
           <input
             type="text"
@@ -67,7 +74,6 @@ const Login = () => {
             required
             className="input-field"
           />
-
           <div className="password-wrapper">
             <input
               type={showPassword ? "text" : "password"}

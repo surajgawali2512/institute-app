@@ -1,85 +1,127 @@
-/* src/pages/Home.css */
-
-/* ========== HERO ========== */
 .hero1 {
-  background: linear-gradient(135deg, #457b9d 0%, #1d3557 100%);
-  height: 70vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-}
-
-.hero-content {
+  background-color: #f4f4f4;
+  padding: 60px 20px;
   text-align: center;
-  max-width: 600px;
-  padding: 0 1rem;
 }
 
 .hero-content h1 {
-  font-size: 3rem;
-  margin-bottom: 1rem;
+  font-size: 2.5rem;
 }
 
 .hero-content p {
-  font-size: 1.25rem;
-  margin-bottom: 1.5rem;
+  font-size: 1.2rem;
+  margin: 10px 0 20px;
 }
 
-.btn {
-  display: inline-block;
-  padding: 0.75rem 1.5rem;
-  background-color: #e63946;
-  color: #fff;
+.register-institute-btn {
+  padding: 10px 20px;
+  font-size: 1rem;
+  background-color: #0056b3;
+  color: white;
+  border: none;
   border-radius: 8px;
-  text-decoration: none;
-  font-weight: 600;
-  transition: background 0.3s ease;
+  cursor: pointer;
 }
 
-.btn:hover {
-  background-color: #d62828;
+.register-institute-btn:hover {
+  background-color: #004399;
 }
 
-/* ========== FEATURES ========== */
 .features {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 2rem;
-  padding: 4rem 2rem;
-  background-color: #f5f5f5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  padding: 30px;
 }
 
 .feature-card {
-  background-color: #fff;
-  padding: 2rem;
+  background-color: white;
+  border: 1px solid #ddd;
+  padding: 20px;
+  width: 300px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.feature-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .feature-card h3 {
-  font-size: 1.5rem;
-  margin-bottom: 0.75rem;
-  color: #1d3557;
+  margin-bottom: 10px;
 }
 
-.feature-card p {
-  color: #555;
-  line-height: 1.4;
+.btn {
+  background-color: #0066cc;
+  color: white;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
-/* ========== FOOTER ========== */
+.btn:hover {
+  background-color: #0052a3;
+}
+
 .footer {
   text-align: center;
-  padding: 1.5rem 0;
-  background-color: #1d3557;
-  color: #fff;
-  font-size: 0.9rem;
+  padding: 20px;
+  background-color: #222;
+  color: #eee;
+  margin-top: 30px;
+}
+
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.popup {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  width: 400px;
+}
+
+.popup h2 {
+  margin-bottom: 15px;
+}
+
+.popup form input,
+.popup form textarea {
+  width: 100%;
+  padding: 8px;
+  margin: 6px 0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.button-group {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+}
+
+.save-button {
+  background-color: #28a745;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.cancel-button {
+  background-color: #dc3545;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
 }
