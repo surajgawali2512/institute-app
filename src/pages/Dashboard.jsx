@@ -18,16 +18,13 @@ const Dashboard = () => {
     fetchCourses();
   }, []);
 
-  const fetchCourses = () => {
-    axiosInstance
-      .get("/course/get")
-      .then((response) => {
-        console.log("Courses:", response.data);
-        setCourses(response.data);
-      })
-      .catch((error) => {
-        console.error("Failed to fetch courses", error);
-      });
+  const fetchCourses = async () => {
+    try {
+      const response = await axiosInstance.get("/course/get");
+      setCourses(response.data);
+    } catch (error) {
+      console.error("❌ Failed to fetch courses:", error);
+    }
   };
 
   const handleAddCourseSubmit = async (e) => {
@@ -69,7 +66,7 @@ const Dashboard = () => {
             <div className="feature-card" key={course.courseId}>
               <h3>📚 {course.name}</h3>
               <p>{course.description}</p>
-              <Link to={`/courses/${course.courseId}`}>
+              <Link to={`/departments/${course.courseId}`}>
                 <button className="btn">Go to Course</button>
               </Link>
             </div>

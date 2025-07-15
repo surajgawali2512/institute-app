@@ -1,26 +1,28 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import Home from "./pages/Home"; // Make sure this exists
-import Login from "./pages/Login"; // Make sure this exists
-import RegisterInstitute from "./components/RegisterInstitute"; // Ensure it's correctly imported
-import NotFound from "./pages/NotFound"; // Ensure it's correctly imported for 404 pages
-import Courses from "./components/Courses"; // Ensure it's correctly imported
-import ChoosePlan from "./components/ChoosePlan"; // Ensure it's correctly imported
-import useIdleTimer from "./services/useIdleTimer"; // Ensure it's correctly implemented
-import Dashboard from "./pages/Dashboard"; // Ensure this is correctly imported
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import RegisterInstitute from "./components/RegisterInstitute";
+import NotFound from "./pages/NotFound";
+import Courses from "./components/Courses";
+import ChoosePlan from "./components/ChoosePlan";
+import useIdleTimer from "./services/useIdleTimer";
+import Dashboard from "./pages/Dashboard";
+import Departments from "./components/Departments"; // ✅ New import
 
 const App = () => {
-  useIdleTimer(); // Call the hook here to start monitoring user activity
+  useIdleTimer(); // Starts user idle session tracking
 
   return (
     <Routes>
-      <Route path="/" element={<Home />} /> {/* Home page */}
-      <Route path="/dashboard" element={<Dashboard />} /> {/* Dashboard page */}
-      <Route path="/register" element={<RegisterInstitute />} /> {/* Register Institute page */}
-      <Route path="/courses" element={<Courses />} /> {/* Courses page */}
-      <Route path="/login" element={<Login />} /> {/* Login page */}
-      <Route path="*" element={<NotFound />} /> {/* Handle all undefined routes */}
-      <Route path="/choose-plan" element={<ChoosePlan />} /> {/* Choose plan page */}
+      <Route path="/" element={<Home />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/register" element={<RegisterInstitute />} />
+      <Route path="/courses" element={<Courses />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/choose-plan" element={<ChoosePlan />} />
+      <Route path="/departments/:courseId" element={<Departments />} /> {/* ✅ New Route */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };
